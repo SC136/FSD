@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Joke Lab</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(145deg, #f7fff4 0%, #f0f9ff 100%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 540px;
+    }
+
+    .card {
+      background: white;
+      padding: 48px 44px;
+      border: 2px solid green;
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(37, 99, 56, 0.12);
+    }
+
+    .emoji { font-size: 56px; text-align: center; margin-bottom: 16px; }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #95a5a6;
+      font-size: 14px;
+      margin-bottom: 36px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: #34495e;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid green;
+      font-size: 16px;
+      outline: none;
+      transition: border-color .2s;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"]:focus { border-color: #f5576c; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 12px;
+      border: 2px solid green;
+      font-size: 15px;
+      background: #fff;
+      outline: none;
+    }
+
+    select:focus { border-color: #f5576c; }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      background: green;
+      color: white;
+      border: none;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, opacity .15s;
+    }
+
+    button:hover { opacity: .92; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .result {
+      margin-top: 28px;
+      border: 2px solid green;
+      border-radius: 14px;
+      padding: 28px;
+      background: #fbfffd;
+    }
+
+    .result h2 {
+      color: #4f46e5;
+      font-size: 17px;
+      margin-bottom: 14px;
+    }
+
+    .joke-text {
+      color: #2c3e50;
+      font-size: 17px;
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    .punchline {
+      margin-top: 12px;
+      color: #f5576c;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .error {
+      margin-top: 20px;
+      background: #fff5f5;
+      border: 2px solid #fed7d7;
+      border-radius: 12px;
+      padding: 18px 22px;
+      color: #e53e3e;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .api-tag {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #bdc3c7;
+    }
+
+    .api-tag a { color: #bdc3c7; }
+
+    .meta {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .quick-link {
+      display: block;
+      margin-top: 10px;
+      color: #2563eb;
+      font-size: 13px;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    @media (max-width: 620px) {
+      .card {
+        padding: 32px 24px;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="emoji">😂</div>
+    <h1>Joke Lab</h1>
+    <p class="subtitle">Personalized jokes with live JokeAPI filters</p>
+
+
+    <form action="/joke" method="POST">
+      <label for="name">Your Name</label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        placeholder="e.g. Rahul"
+        value="<%= name || '' %>"
+        required
+      />
+
+      <div class="row">
+        <div>
+          <label for="category">Category</label>
+          <select id="category" name="category">
+            <option value="Any" <%= formValues.category === 'Any' ? 'selected' : '' %>>Any</option>
+            <option value="Programming" <%= formValues.category === 'Programming' ? 'selected' : '' %>>Programming</option>
+            <option value="Misc" <%= formValues.category === 'Misc' ? 'selected' : '' %>>Misc</option>
+            <option value="Pun" <%= formValues.category === 'Pun' ? 'selected' : '' %>>Pun</option>
+            <option value="Spooky" <%= formValues.category === 'Spooky' ? 'selected' : '' %>>Spooky</option>
+            <option value="Christmas" <%= formValues.category === 'Christmas' ? 'selected' : '' %>>Christmas</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="type">Joke Type</label>
+          <select id="type" name="type">
+            <option value="any" <%= formValues.type === 'any' ? 'selected' : '' %>>Any</option>
+            <option value="single" <%= formValues.type === 'single' ? 'selected' : '' %>>Single-line</option>
+            <option value="twopart" <%= formValues.type === 'twopart' ? 'selected' : '' %>>Setup + Punchline</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="contains">Must Contain Keyword (optional)</label>
+      <input
+        type="text"
+        id="contains"
+        name="contains"
+        placeholder="e.g. dog"
+        value="<%= formValues.contains || '' %>"
+      />
+
+      <button type="submit">🎲 Get My Joke!</button>
+    </form>
+
+    <% if (error) { %>
+      <div class="error">⚠️ <%= error %></div>
+    <% } %>
+
+    <% if (joke) { %>
+      <div class="result">
+        <h2>🎉 Hey <%= name %>, here's one for you!</h2>
+        <% if (joke.type === 'twopart') { %>
+          <p class="joke-text"><%= joke.setup %></p>
+          <p class="punchline"><%= joke.delivery %></p>
+        <% } else { %>
+          <p class="joke-text"><%= joke.joke %></p>
+        <% } %>
+
+        <p class="meta">
+          Category: <strong><%= joke.category %></strong> | Type: <strong><%= joke.type %></strong><br/>
+          Joke ID: <strong><%= joke.id %></strong> | Safe: <strong><%= joke.safe ? 'Yes' : 'No' %></strong>
+        </p>
+      </div>
+    <% } %>
+
+    <a
+      class="quick-link"
+      href="/api/joke?category=<%= formValues.category %>&type=<%= formValues.type %>&contains=<%= encodeURIComponent(formValues.contains || '') %>"
+      target="_blank"
+      rel="noreferrer"
+    >
+      Open current filters as JSON API response
+    </a>
+
+    <p class="api-tag">
+      Powered by <a href="https://sv443.net/jokeapi/v2/" target="_blank">JokeAPI v2</a>
+      via Axios + Express
+    </p>
+  </div>
+</div>
+</body>
+</html>

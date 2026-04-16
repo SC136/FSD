@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 820px;
+           margin: 40px auto; padding: 0 20px; }
+    h1   { text-align: center; color: #2c3e50; }
+    form { background: #f4f4f4; padding: 20px;
+           border-radius: 8px; margin-bottom: 24px; }
+    label  { display: block; margin-top: 10px; font-weight: bold; }
+    input, select { width: 100%; padding: 8px; margin-top: 4px;
+                    box-sizing: border-box; border: 1px solid #ccc;
+                    border-radius: 4px; }
+    button         { background: #27ae60; color: #fff; padding: 10px 22px;
+                     border: none; cursor: pointer; border-radius: 4px;
+                     margin-top: 14px; }
+    button.delete  { background: #e74c3c; padding: 5px 12px; margin: 0; }
+    #total { font-size: 1.2em; font-weight: bold; margin-bottom: 12px; }
+    table  { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+    th     { background: #27ae60; color: #fff; }
+    tr:nth-child(even) { background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <h1>Expense Tracker</h1>
+
+  <form id="expenseForm">
+    <h3>Add New Expense</h3>
+    <label>Amount (Rs.):</label>
+    <input type="number" id="amount" placeholder="Enter amount" min="1" required>
+
+    <label>Category:</label>
+    <select id="category">
+      <option value="Food">Food</option>
+      <option value="Travel">Travel</option>
+      <option value="Bills">Bills</option>
+      <option value="Shopping">Shopping</option>
+      <option value="Entertainment">Entertainment</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label>Date:</label>
+    <input type="date" id="date" required>
+
+    <button type="submit">Add Expense</button>
+  </form>
+
+  <div id="total">Total Expenses: Rs. 0</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Amount (Rs.)</th>
+        <th>Category</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="expenseList"></tbody>
+  </table>
+
+  <script>
+    const API = 'http://localhost:3000/expenses';
+
+    async function loadExpenses() {
+      const res      = await fetch(API);
+      const expenses = await res.json();
+      const tbody    = document.getElementById('expenseList');
+      tbody.innerHTML = '';
+      let total = 0;
+      expenses.forEach(e => {
+        total += e.amount;
+        tbody.innerHTML += `<tr>
+          <td>Rs. ${e.amount}</td>
+          <td>${e.category}</td>
+          <td>${new Date(e.date).toLocaleDateString()}</td>
+          <td><button class="delete"
+              onclick="deleteExpense('${e._id}')">Delete</button></td>
+        </tr>`;
+      });
+      document.getElementById('total').textContent =
+        'Total Expenses: Rs. ' + total;
+    }
+
+    document.getElementById('expenseForm')
+      .addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const expense = {
+          amount:   parseFloat(document.getElementById('amount').value),
+          category: document.getElementById('category').value,
+          date:     document.getElementById('date').value
+        };
+        await fetch(API, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(expense)
+        });
+        e.target.reset();
+        loadExpenses();
+      });
+
+    async function deleteExpense(id) {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      loadExpenses();
+    }
+
+    loadExpenses();
+  </script>
+</body>
+</html>
