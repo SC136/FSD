@@ -1,13 +1,21 @@
 const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-mongoose.connect('mongodb+srv://fsd:fsd@cluster0.df1dk.mongodb.net/expensetracker')
+const mongoUri = process.env.MONGODB_URI;
+
+if (!mongoUri) {
+  console.error('Missing MONGODB_URI. Set it in your environment before starting the server.');
+  process.exit(1);
+}
+
+mongoose.connect(mongoUri)
   .then(() => console.log('MongoDB Connected'))
   .catch(err  => console.log(err));
 
