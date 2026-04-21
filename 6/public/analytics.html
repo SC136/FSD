@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Insights</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --canvas: #F5F4ED;
+      --ink: #1A1A2E;
+      --ink-muted: #4A4A5A;
+      --accent: #1B365D;
+      --accent-warm: #C0392B;
+      --border: rgba(26,26,46,0.12);
+      --surface: rgba(245,244,237,0.5);
+      --display-font: 'Newsreader', serif;
+      --body-font: 'Source Serif 4', serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--canvas);
+      color: var(--ink);
+      font-family: var(--body-font);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.05;
+      filter: url(#noise-filter);
+    }
+
+    .editorial-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1.8rem 6vw;
+      display: flex;
+      justify-content: flex-end;
+      gap: 3vw;
+      z-index: 1000;
+      background: rgba(245, 244, 237, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .editorial-nav a {
+      font-family: var(--display-font);
+      font-size: 1.15rem;
+      text-decoration: none;
+      color: var(--ink-muted);
+      transition: color 0.3s ease;
+    }
+
+    .editorial-nav a:hover,
+    .editorial-nav a.active {
+      color: var(--accent-warm);
+      font-style: italic;
+    }
+
+    .insights-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10rem 4vw 6rem;
+    }
+
+    h1 {
+      font-family: var(--display-font);
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      letter-spacing: -0.03em;
+      font-weight: 300;
+      margin-bottom: 4rem;
+      color: var(--ink);
+      animation: fadeUp 1s ease 0s both;
+    }
+
+    h1 i {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stagger-2 { animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 4rem 3rem;
+      margin-top: 3rem;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .kpi-card {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1rem 1.2rem;
+    }
+
+    .kpi-label {
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.01em;
+    }
+
+    .kpi-value {
+      font-family: var(--display-font);
+      font-size: 1.8rem;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+
+    .kpi-note {
+      margin-top: 0.35rem;
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+    }
+
+    .kpi-note.up {
+      color: #9f2f2f;
+    }
+
+    .kpi-note.down {
+      color: #2e6b4a;
+    }
+
+    .top-expenses {
+      margin-top: 3rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.5rem;
+    }
+
+    .top-expenses h2 {
+      font-family: var(--display-font);
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 0.8rem;
+    }
+
+    .top-expenses-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .top-expenses-list li {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 0.9fr;
+      gap: 0.75rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-expenses-list li:last-child {
+      border-bottom: 0;
+    }
+
+    .empty-state {
+      color: var(--ink-muted);
+      font-style: italic;
+    }
+
+    .chart-panel {
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      background: var(--surface);
+      position: relative;
+    }
+
+    .chart-panel::before {
+      content: attr(data-title);
+      position: absolute;
+      top: -1rem;
+      left: 1.5rem;
+      background: var(--canvas);
+      padding: 0 0.5rem;
+      font-family: var(--display-font);
+      font-style: italic;
+      font-size: 1.3rem;
+      color: var(--ink);
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 300px !important;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <svg style="display:none;">
+    <filter id="noise-filter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/>
+    </filter>
+  </svg>
+  <div class="noise-overlay"></div>
+
+  <nav class="editorial-nav">
+    <a href="index.html">Logbook</a>
+    <a href="analytics.html" class="active">Insights</a>
+    <a href="news.html">News</a>
+  </nav>
+
+  <main class="insights-container">
+    <h1>Financial <i>Analysis.</i></h1>
+
+    <section class="kpi-grid stagger-2">
+      <article class="kpi-card">
+        <p class="kpi-label">Total Spend</p>
+        <p class="kpi-value" id="kpiTotalSpend">Rs. 0.00</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-label">Transactions</p>
+        <p class="kpi-value" id="kpiTransactions">0</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-label">Top Category</p>
+        <p class="kpi-value" id="kpiTopCategory">N/A</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-label">Month over Month</p>
+        <p class="kpi-value" id="kpiMonthTotal">Rs. 0.00</p>
+        <p class="kpi-note" id="kpiMonthNote">Not enough data yet.</p>
+      </article>
+    </section>
+
+    <div class="charts-grid stagger-2">
+      <div class="chart-panel" data-title="Monthly Volume">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+      <div class="chart-panel" data-title="Distribution Share">
+        <canvas id="categoryChart"></canvas>
+      </div>
+      <div class="chart-panel" data-title="7-Day Motion">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+    <section class="top-expenses stagger-2">
+      <h2>Top 5 Expenses</h2>
+      <ul id="topExpensesList" class="top-expenses-list"></ul>
+    </section>
+  </main>
+
+  <script>
+    const ANALYTICS_API = 'http://localhost:3000/expenses/analytics';
+    const chartsObj = { monthly: null, category: null, trend: null };
+
+    Chart.defaults.font.family = "'Source Serif 4', serif";
+    Chart.defaults.color = '#4A4A5A';
+    Chart.defaults.scale.grid.color = 'rgba(26,26,46,0.06)';
+
+    function renderChart(target, config) {
+      if (chartsObj[target]) chartsObj[target].destroy();
+      chartsObj[target] = new Chart(document.getElementById(`${target}Chart`), config);
+    }
+
+    function renderCharts(analytics) {
+      const baseColors = ['#1A1A2E', '#1B365D', '#B8954A', '#C0392B', '#EAE7DC', '#4A4A5A'];
+
+      renderChart('monthly', {
+        type: 'bar',
+        data: {
+          labels: analytics.monthlyTotals.map((x) => x.label),
+          datasets: [{
+            label: 'Volume (Rs)',
+            data: analytics.monthlyTotals.map((x) => x.total),
+            backgroundColor: '#1B365D'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      renderChart('category', {
+        type: 'polarArea',
+        data: {
+          labels: analytics.categoryBreakdown.map((x) => x.category),
+          datasets: [{
+            data: analytics.categoryBreakdown.map((x) => x.total),
+            backgroundColor: baseColors
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { r: { grid: { display: false }, ticks: { display: false } } }
+        }
+      });
+
+      renderChart('trend', {
+        type: 'line',
+        data: {
+          labels: analytics.recent7Days.map((x) => {
+            const d = new Date(x.label);
+            return d.toLocaleDateString(undefined, { weekday: 'short' });
+          }),
+          datasets: [{
+            label: 'Daily Trajectory',
+            data: analytics.recent7Days.map((x) => x.total),
+            fill: true,
+            backgroundColor: 'rgba(192, 57, 43, 0.05)',
+            borderColor: '#C0392B',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          elements: { point: { radius: 3, backgroundColor: '#C0392B' } }
+        }
+      });
+    }
+
+    function renderSummary(summary) {
+      document.getElementById('kpiTotalSpend').textContent = `Rs. ${(summary?.totalSpent || 0).toFixed(2)}`;
+      document.getElementById('kpiTransactions').textContent = String(summary?.transactionCount || 0);
+      document.getElementById('kpiTopCategory').textContent = summary?.topCategory || 'N/A';
+      document.getElementById('kpiMonthTotal').textContent = `Rs. ${(summary?.latestMonthTotal || 0).toFixed(2)}`;
+
+      const note = document.getElementById('kpiMonthNote');
+      const pct = summary?.monthChangePercent;
+      note.className = 'kpi-note';
+
+      if (pct === null || typeof pct !== 'number') {
+        note.textContent = 'Not enough data yet.';
+        return;
+      }
+
+      const direction = pct >= 0 ? 'up' : 'down';
+      note.classList.add(direction);
+      note.textContent = `${pct >= 0 ? '+' : ''}${pct}% vs previous month`;
+    }
+
+    function renderTopExpenses(topExpenses) {
+      const list = document.getElementById('topExpensesList');
+      list.innerHTML = '';
+
+      if (!topExpenses || topExpenses.length === 0) {
+        list.innerHTML = '<li class="empty-state">No expenses available yet.</li>';
+        return;
+      }
+
+      topExpenses.forEach((item) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span>Rs. ${Number(item.amount || 0).toFixed(2)}</span>
+          <span>${item.category || 'Other'}</span>
+          <span>${new Date(item.date).toLocaleDateString()}</span>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    async function fetchAnalytics() {
+      try {
+        const response = await fetch(ANALYTICS_API);
+        if (!response.ok) throw new Error('Failed to retrieve analytics data');
+        const data = await response.json();
+        renderCharts(data);
+        renderSummary(data.summary);
+        renderTopExpenses(data.topExpenses);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchAnalytics();
+  </script>
+</body>
+</html>

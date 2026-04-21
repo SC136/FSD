@@ -2,110 +2,612 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Expense Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Ledger</title>
+  
+  <!-- Fine Art × Editorial Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
+  
   <style>
-    body { font-family: Arial, sans-serif; max-width: 820px;
-           margin: 40px auto; padding: 0 20px; }
-    h1   { text-align: center; color: #2c3e50; }
-    form { background: #f4f4f4; padding: 20px;
-           border-radius: 8px; margin-bottom: 24px; }
-    label  { display: block; margin-top: 10px; font-weight: bold; }
-    input, select { width: 100%; padding: 8px; margin-top: 4px;
-                    box-sizing: border-box; border: 1px solid #ccc;
-                    border-radius: 4px; }
-    button         { background: #27ae60; color: #fff; padding: 10px 22px;
-                     border: none; cursor: pointer; border-radius: 4px;
-                     margin-top: 14px; }
-    button.delete  { background: #e74c3c; padding: 5px 12px; margin: 0; }
-    #total { font-size: 1.2em; font-weight: bold; margin-bottom: 12px; }
-    table  { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-    th     { background: #27ae60; color: #fff; }
-    tr:nth-child(even) { background: #f9f9f9; }
+    /* Warm Parchment Token Block */
+    :root {
+      --canvas:        #F5F4ED;
+      --canvas-deep:   #EAE7DC;
+      --ink:           #1A1A2E;
+      --ink-muted:     #4A4A5A;
+      --accent:        #1B365D;   /* ink blue */
+      --accent-warm:   #C0392B;   /* rust/terracotta */
+      --accent-gold:   #B8954A;
+      --border:        rgba(26,26,46,0.12);
+      --surface:       rgba(245,244,237,0.85);
+
+      --display-font: 'Newsreader', serif;
+      --body-font:    'Source Serif 4', serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--canvas);
+      color: var(--ink);
+      font-family: var(--body-font);
+      font-weight: 300;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Subdued parchment noise overlay */
+    .noise-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.05;
+      filter: url(#noise-filter);
+    }
+
+    /* Floating navigation */
+    .editorial-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.8rem 6vw;
+      display: flex;
+      justify-content: flex-end;
+      gap: 3vw;
+      z-index: 1000;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .editorial-nav a {
+      font-family: var(--display-font);
+      font-size: 1.15rem;
+      text-decoration: none;
+      color: var(--ink-muted);
+      letter-spacing: 0.02em;
+      transition: color 0.3s ease;
+    }
+
+    .editorial-nav a:hover, .editorial-nav a.active {
+      color: var(--accent-warm);
+      font-style: italic;
+    }
+
+    /* Main editorial layout */
+    .ledger-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 10rem 4vw 6rem;
+    }
+
+    h1 {
+      font-family: var(--display-font);
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      letter-spacing: -0.03em;
+      font-weight: 300;
+      margin-bottom: 4rem;
+      color: var(--ink);
+      animation: fadeUp 1s ease 0s both;
+    }
+    h1 i {
+      font-style: italic;
+      color: var(--accent-warm);
+    }
+
+    /* Staggered Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .stagger-1 { animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+    .stagger-2 { animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+    .stagger-3 { animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+
+    /* The 'Journal Entry' Form Section */
+    .editor-section {
+      margin-bottom: 6rem;
+    }
+    .section-title {
+      font-family: var(--display-font);
+      font-weight: 400;
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 0.5rem;
+    }
+    .section-title i { color: var(--accent-gold); }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2.5rem 1.5rem;
+      align-items: flex-end;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    label {
+      text-transform: uppercase;
+      font-family: var(--body-font);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    input, select {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      font-family: var(--body-font);
+      font-size: 1.2rem;
+      padding: 0.4rem 0;
+      color: var(--ink);
+      transition: border-color 0.3s ease;
+      cursor: text;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-bottom-color: var(--accent-warm);
+    }
+    
+    input[type="date"] {
+      font-family: var(--display-font);
+      font-style: italic;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+
+    button {
+      background: transparent;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      font-family: var(--display-font);
+      font-size: 1.1rem;
+      padding: 0.6rem 2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 2px;
+    }
+
+    button:hover {
+      background: var(--ink);
+      color: var(--canvas);
+    }
+
+    button.primary {
+      background: var(--accent-warm);
+      color: var(--canvas);
+      border-color: var(--accent-warm);
+    }
+
+    button.primary:hover {
+      background: var(--canvas);
+      color: var(--accent-warm);
+    }
+
+    .status {
+      margin-top: 1rem;
+      font-family: var(--display-font);
+      font-style: italic;
+      font-size: 1.1rem;
+    }
+    .status.error { color: var(--accent-warm); }
+    .status.success { color: var(--accent-gold); }
+
+    /* The Ledger Data Table */
+    .toolbar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .toolbar select, .toolbar input {
+      font-size: 0.95rem;
+      padding: 0.3rem 0;
+      color: var(--ink-muted);
+      width: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 0.5rem;
+      text-align: left;
+    }
+
+    th {
+      font-family: var(--display-font);
+      font-style: italic;
+      font-weight: 400;
+      color: var(--ink-muted);
+      font-size: 1.2rem;
+    }
+
+    td {
+      font-size: 1.1rem;
+      vertical-align: middle;
+    }
+
+    .td-amount {
+      font-family: var(--display-font);
+      font-size: 1.3rem;
+    }
+
+    .table-actions button {
+      border: none;
+      background: transparent;
+      padding: 0;
+      font-size: 1rem;
+      color: var(--ink-muted);
+      border-bottom: 1px solid transparent;
+      margin-right: 1rem;
+    }
+    .table-actions button:hover {
+      background: transparent;
+      color: var(--accent-warm);
+      border-bottom: 1px solid var(--accent-warm);
+    }
+
+    .summary {
+      font-family: var(--display-font);
+      font-size: 1.8rem;
+      text-align: right;
+      margin-top: 2rem;
+      border-top: 1px solid var(--ink);
+      padding-top: 1rem;
+    }
+    .summary-amount {
+      font-style: italic;
+      color: var(--accent-warm);
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 3rem;
+      font-family: var(--display-font);
+      font-style: italic;
+      color: var(--ink-muted);
+    }
+    .pagination button {
+      padding: 0.4rem 1.2rem;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Expense Tracker</h1>
+  
+  <svg style="display:none;">
+    <filter id="noise-filter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/>
+    </filter>
+  </svg>
+  <div class="noise-overlay"></div>
 
-  <form id="expenseForm">
-    <h3>Add New Expense</h3>
-    <label>Amount (Rs.):</label>
-    <input type="number" id="amount" placeholder="Enter amount" min="1" required>
+  <nav class="editorial-nav">
+    <a href="index.html" class="active">Logbook</a>
+    <a href="analytics.html">Insights</a>
+    <a href="news.html">News</a>
+  </nav>
 
-    <label>Category:</label>
-    <select id="category">
-      <option value="Food">Food</option>
-      <option value="Travel">Travel</option>
-      <option value="Bills">Bills</option>
-      <option value="Shopping">Shopping</option>
-      <option value="Entertainment">Entertainment</option>
-      <option value="Other">Other</option>
-    </select>
+  <main class="ledger-container">
+    <h1 class="stagger-1">The <i>Ledger</i>.</h1>
 
-    <label>Date:</label>
-    <input type="date" id="date" required>
+    <section class="editor-section stagger-2">
+      <h2 class="section-title">Record <i>Entry</i></h2>
+      
+      <form id="expenseForm" novalidate>
+        <div class="grid-form">
+          <div class="input-group">
+            <label for="amount">Amount (Rs)</label>
+            <input id="amount" type="number" min="0.01" step="0.01" required />
+          </div>
+          <div class="input-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+              <option value="Food">Food</option>
+              <option value="Travel">Travel</option>
+              <option value="Bills">Bills</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="date">Transacted On</label>
+            <input id="date" type="date" required />
+          </div>
+        </div>
+        <div class="actions">
+          <button id="saveBtn" class="primary" type="submit">Commit to Ledger</button>
+          <button id="cancelEditBtn" type="button" style="display:none;">Cancel Amendment</button>
+        </div>
+        <div id="status" class="status"></div>
+      </form>
+    </section>
 
-    <button type="submit">Add Expense</button>
-  </form>
+    <section class="list-section stagger-3">
+      <h2 class="section-title">Audit <i>Trail</i></h2>
+      
+      <div class="toolbar">
+        <select id="filterCategory">
+          <option value="">All Categories</option>
+          <option value="Food">Food</option>
+          <option value="Travel">Travel</option>
+          <option value="Bills">Bills</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Other">Other</option>
+        </select>
+        
+        <input id="startDate" type="date" aria-label="Start Date" />
+        <span style="align-self: flex-end; padding-bottom: 0.5rem; color: var(--ink-muted);">&mdash;</span>
+        <input id="endDate" type="date" aria-label="End Date" />
 
-  <div id="total">Total Expenses: Rs. 0</div>
+        <select id="sortBy">
+          <option value="date">Sort by Date</option>
+          <option value="amount">Sort by Amount</option>
+          <option value="category">Sort by Category</option>
+        </select>
+        
+        <select id="sortOrder">
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Amount (Rs.)</th>
-        <th>Category</th>
-        <th>Date</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="expenseList"></tbody>
-  </table>
+        <button id="exportCsvBtn" type="button" style="padding: 0.45rem 1rem; font-size: 0.95rem; align-self: flex-end;">Export CSV</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="expenseList"></tbody>
+      </table>
+
+      <div class="summary">
+        Total: <span class="summary-amount" id="total">Rs. 0</span>
+      </div>
+
+      <div class="pagination">
+        <button id="prevPageBtn" type="button">Previous</button>
+        <span id="pageMeta">Page 1</span>
+        <button id="nextPageBtn" type="button">Next</button>
+      </div>
+    </section>
+
+  </main>
 
   <script>
     const API = 'http://localhost:3000/expenses';
 
-    async function loadExpenses() {
-      const res      = await fetch(API);
-      const expenses = await res.json();
-      const tbody    = document.getElementById('expenseList');
-      tbody.innerHTML = '';
-      let total = 0;
-      expenses.forEach(e => {
-        total += e.amount;
-        tbody.innerHTML += `<tr>
-          <td>Rs. ${e.amount}</td>
-          <td>${e.category}</td>
-          <td>${new Date(e.date).toLocaleDateString()}</td>
-          <td><button class="delete"
-              onclick="deleteExpense('${e._id}')">Delete</button></td>
-        </tr>`;
-      });
-      document.getElementById('total').textContent =
-        'Total Expenses: Rs. ' + total;
+    const state = {
+      page: 1, limit: 12, totalPages: 1,
+      sortBy: 'date', sortOrder: 'desc',
+      category: '', startDate: '', endDate: '',
+      expenses: [], editingId: null
+    };
+
+    const elements = {
+      form: document.getElementById('expenseForm'),
+      amount: document.getElementById('amount'),
+      category: document.getElementById('category'),
+      date: document.getElementById('date'),
+      saveBtn: document.getElementById('saveBtn'),
+      cancelEditBtn: document.getElementById('cancelEditBtn'),
+      status: document.getElementById('status'),
+      expenseList: document.getElementById('expenseList'),
+      total: document.getElementById('total'),
+      filterCategory: document.getElementById('filterCategory'),
+      startDate: document.getElementById('startDate'),
+      endDate: document.getElementById('endDate'),
+      sortBy: document.getElementById('sortBy'),
+      sortOrder: document.getElementById('sortOrder'),
+      exportCsvBtn: document.getElementById('exportCsvBtn'),
+      pageMeta: document.getElementById('pageMeta'),
+      prevPageBtn: document.getElementById('prevPageBtn'),
+      nextPageBtn: document.getElementById('nextPageBtn')
+    };
+
+    function showStatus(message, kind) {
+      elements.status.textContent = message;
+      elements.status.className = `status ${kind || ''}`;
     }
 
-    document.getElementById('expenseForm')
-      .addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const expense = {
-          amount:   parseFloat(document.getElementById('amount').value),
-          category: document.getElementById('category').value,
-          date:     document.getElementById('date').value
-        };
-        await fetch(API, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(expense)
-        });
-        e.target.reset();
-        loadExpenses();
+    function clearStatus() { showStatus('', ''); }
+
+    function resetForm() {
+      state.editingId = null;
+      elements.form.reset();
+      elements.saveBtn.textContent = 'Commit to Ledger';
+      elements.cancelEditBtn.style.display = 'none';
+      elements.date.value = new Date().toISOString().slice(0, 10);
+    }
+    
+    // Init date to today
+    elements.date.value = new Date().toISOString().slice(0, 10);
+
+    function setEditMode(expense) {
+      state.editingId = expense._id;
+      elements.amount.value = expense.amount;
+      elements.category.value = expense.category;
+      elements.date.value = new Date(expense.date).toISOString().slice(0, 10);
+      elements.saveBtn.textContent = 'Amend Entry';
+      elements.cancelEditBtn.style.display = 'inline-block';
+      clearStatus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function apiRequest(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    function buildExpenseQuery() {
+      const params = new URLSearchParams({
+        page: String(state.page), limit: String(state.limit),
+        sortBy: state.sortBy, sortOrder: state.sortOrder
       });
+      if (state.category) params.set('category', state.category);
+      if (state.startDate) params.set('startDate', state.startDate);
+      if (state.endDate) params.set('endDate', state.endDate);
+      return `${API}?${params.toString()}`;
+    }
+
+    function buildExportQuery() {
+      const params = new URLSearchParams({
+        sortBy: state.sortBy,
+        sortOrder: state.sortOrder
+      });
+      if (state.category) params.set('category', state.category);
+      if (state.startDate) params.set('startDate', state.startDate);
+      if (state.endDate) params.set('endDate', state.endDate);
+      return `${API}/export.csv?${params.toString()}`;
+    }
+
+    function renderTable() {
+      elements.expenseList.innerHTML = '';
+      let total = 0;
+      
+      if (state.expenses.length === 0) {
+        elements.expenseList.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--ink-muted); font-style: italic;">No entries found.</td></tr>';
+      }
+
+      state.expenses.forEach(expense => {
+        total += expense.amount;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="td-amount">Rs. ${expense.amount.toFixed(2)}</td>
+          <td>${expense.category}</td>
+          <td style="font-family: var(--display-font); font-style: italic;">${new Date(expense.date).toLocaleDateString()}</td>
+          <td class="table-actions">
+            <button type="button" class="edit-btn">Edit</button>
+            <button type="button" class="delete-btn">Delete</button>
+          </td>
+        `;
+        row.querySelector('.edit-btn').addEventListener('click', () => setEditMode(expense));
+        row.querySelector('.delete-btn').addEventListener('click', () => deleteExpense(expense._id));
+        elements.expenseList.appendChild(row);
+      });
+
+      elements.total.textContent = `Rs. ${total.toFixed(2)}`;
+      elements.pageMeta.textContent = `Page ${state.page} / ${state.totalPages}`;
+      elements.prevPageBtn.style.visibility = state.page <= 1 ? 'hidden' : 'visible';
+      elements.nextPageBtn.style.visibility = state.page >= state.totalPages ? 'hidden' : 'visible';
+    }
+
+    async function loadExpenses() {
+      try {
+        const data = await apiRequest(buildExpenseQuery());
+        state.expenses = data.data || [];
+        state.totalPages = data.pagination?.totalPages || 1;
+        if (state.page > state.totalPages && state.totalPages > 0) {
+          state.page = state.totalPages;
+          return loadExpenses();
+        }
+        renderTable();
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
+    }
 
     async function deleteExpense(id) {
-      await fetch(`${API}/${id}`, { method: 'DELETE' });
-      loadExpenses();
+      if (!confirm('Delete this entry?')) return;
+      try {
+        await apiRequest(`${API}/${id}`, { method: 'DELETE' });
+        showStatus('Entry deleted.', 'success');
+        await loadExpenses();
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
     }
+
+    elements.form.addEventListener('submit', async event => {
+      event.preventDefault();
+      clearStatus();
+      const payload = {
+        amount: parseFloat(elements.amount.value),
+        category: elements.category.value,
+        date: elements.date.value
+      };
+      
+      try {
+        if (state.editingId) {
+          await apiRequest(`${API}/${state.editingId}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          showStatus('Entry formally amended.', 'success');
+        } else {
+          await apiRequest(API, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          showStatus('Committed to record.', 'success');
+        }
+        resetForm();
+        state.page = 1;
+        await loadExpenses();
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
+    });
+
+    elements.cancelEditBtn.addEventListener('click', () => {
+      resetForm();
+      clearStatus();
+    });
+
+    const refetch = () => { state.page = 1; loadExpenses(); };
+    elements.filterCategory.addEventListener('change', e => { state.category = e.target.value; refetch(); });
+    elements.startDate.addEventListener('change', e => { state.startDate = e.target.value; refetch(); });
+    elements.endDate.addEventListener('change', e => { state.endDate = e.target.value; refetch(); });
+    elements.sortBy.addEventListener('change', e => { state.sortBy = e.target.value; refetch(); });
+    elements.sortOrder.addEventListener('change', e => { state.sortOrder = e.target.value; refetch(); });
+
+    elements.prevPageBtn.addEventListener('click', () => {
+      if (state.page > 1) { state.page -= 1; loadExpenses(); }
+    });
+    elements.nextPageBtn.addEventListener('click', () => {
+      if (state.page < state.totalPages) { state.page += 1; loadExpenses(); }
+    });
+
+    elements.exportCsvBtn.addEventListener('click', () => {
+      clearStatus();
+      window.open(buildExportQuery(), '_blank');
+    });
 
     loadExpenses();
   </script>

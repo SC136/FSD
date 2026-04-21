@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market News</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --canvas: #F5F4ED;
+      --ink: #1A1A2E;
+      --ink-muted: #4A4A5A;
+      --accent: #1B365D;
+      --accent-warm: #C0392B;
+      --border: rgba(26,26,46,0.12);
+      --surface: rgba(245,244,237,0.7);
+      --display-font: 'Newsreader', serif;
+      --body-font: 'Source Serif 4', serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--canvas);
+      color: var(--ink);
+      font-family: var(--body-font);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.05;
+      filter: url(#noise-filter);
+    }
+
+    .editorial-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1.8rem 6vw;
+      display: flex;
+      justify-content: flex-end;
+      gap: 3vw;
+      z-index: 1000;
+      background: rgba(245, 244, 237, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .editorial-nav a {
+      font-family: var(--display-font);
+      font-size: 1.15rem;
+      text-decoration: none;
+      color: var(--ink-muted);
+      transition: color 0.3s ease;
+    }
+
+    .editorial-nav a:hover,
+    .editorial-nav a.active {
+      color: var(--accent-warm);
+      font-style: italic;
+    }
+
+    .news-container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 10rem 4vw 6rem;
+    }
+
+    h1 {
+      font-family: var(--display-font);
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      letter-spacing: -0.03em;
+      font-weight: 300;
+      margin-bottom: 1.25rem;
+      color: var(--ink);
+    }
+
+    h1 i {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--ink-muted);
+      margin-bottom: 2rem;
+      max-width: 760px;
+    }
+
+    .news-toolbar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .news-toolbar input,
+    .news-toolbar select {
+      border: 1px solid var(--border);
+      background: rgba(245, 244, 237, 0.9);
+      color: var(--ink);
+      padding: 0.5rem 0.65rem;
+      font-family: var(--body-font);
+      font-size: 0.95rem;
+    }
+
+    .news-toolbar button {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: var(--canvas);
+      padding: 0.5rem 0.95rem;
+      font-family: var(--display-font);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .news-toolbar button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .news-status {
+      color: var(--ink-muted);
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .news-list {
+      list-style: none;
+      display: grid;
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .news-item {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1rem;
+    }
+
+    .news-item h3 {
+      font-family: var(--display-font);
+      font-size: 1.2rem;
+      margin-bottom: 0.35rem;
+      line-height: 1.25;
+    }
+
+    .news-item p {
+      color: var(--ink-muted);
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .news-meta {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+    }
+
+    .news-chip {
+      border: 1px solid var(--border);
+      padding: 0.12rem 0.45rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      color: var(--accent);
+    }
+
+    .news-link {
+      color: var(--accent-warm);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .news-link:hover {
+      border-bottom-color: var(--accent-warm);
+    }
+  </style>
+</head>
+<body>
+  <svg style="display:none;">
+    <filter id="noise-filter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/>
+    </filter>
+  </svg>
+  <div class="noise-overlay"></div>
+
+  <nav class="editorial-nav">
+    <a href="index.html">Logbook</a>
+    <a href="analytics.html">Insights</a>
+    <a href="news.html" class="active">News</a>
+  </nav>
+
+  <main class="news-container">
+    <h1>Market <i>News.</i></h1>
+    <p class="subtitle">Live Alpha Vantage finance news with sentiment, source details, and quick access to the original stories.</p>
+
+    <div class="news-toolbar">
+      <input id="newsTickers" type="text" placeholder="Tickers e.g. AAPL,MSFT" />
+      <select id="newsSort">
+        <option value="LATEST">LATEST</option>
+        <option value="EARLIEST">EARLIEST</option>
+        <option value="RELEVANCE">RELEVANCE</option>
+      </select>
+      <button id="refreshNewsBtn" type="button">Refresh</button>
+    </div>
+
+    <p id="newsStatus" class="news-status">Loading market intelligence...</p>
+    <ul id="newsList" class="news-list"></ul>
+  </main>
+
+  <script>
+    const FINANCE_NEWS_API = 'http://localhost:3000/api/finance-news';
+    let newsLoading = false;
+
+    const newsElements = {
+      list: document.getElementById('newsList'),
+      status: document.getElementById('newsStatus'),
+      sort: document.getElementById('newsSort'),
+      tickers: document.getElementById('newsTickers'),
+      refresh: document.getElementById('refreshNewsBtn')
+    };
+
+    function renderNews(feed) {
+      newsElements.list.innerHTML = '';
+
+      if (!Array.isArray(feed) || feed.length === 0) {
+        newsElements.list.innerHTML = '<li class="news-item"><p>No finance news matched this filter set.</p></li>';
+        return;
+      }
+
+      feed.slice(0, 15).forEach((article) => {
+        const item = document.createElement('li');
+        item.className = 'news-item';
+
+        const score = Number(article.overall_sentiment_score);
+        const scoreText = Number.isNaN(score) ? 'N/A' : score.toFixed(3);
+
+        item.innerHTML = `
+          <h3>${article.title || 'Untitled story'}</h3>
+          <p>${article.summary || 'No summary provided by Alpha Vantage.'}</p>
+          <div class="news-meta">
+            <span>${article.source || 'Unknown source'}</span>
+            <span class="news-chip">${article.overall_sentiment_label || 'Neutral'}</span>
+            <span>Score ${scoreText}</span>
+            <a class="news-link" href="${article.url || '#'}" target="_blank" rel="noreferrer">Open story</a>
+          </div>
+        `;
+
+        newsElements.list.appendChild(item);
+      });
+    }
+
+    async function fetchFinanceNews() {
+      if (newsLoading) return;
+
+      newsLoading = true;
+      newsElements.refresh.disabled = true;
+      newsElements.status.textContent = 'Fetching market intelligence...';
+
+      try {
+        const params = new URLSearchParams({
+          sort: newsElements.sort.value,
+          limit: '25'
+        });
+
+        const tickers = newsElements.tickers.value.trim();
+        if (tickers) params.set('tickers', tickers);
+
+        const response = await fetch(`${FINANCE_NEWS_API}?${params.toString()}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch finance news.');
+        }
+
+        renderNews(data.feed || []);
+        newsElements.status.textContent = `Loaded ${Array.isArray(data.feed) ? data.feed.length : 0} stories.`;
+      } catch (error) {
+        newsElements.list.innerHTML = '';
+        newsElements.status.textContent = error.message || 'Unable to fetch finance news right now.';
+      } finally {
+        newsLoading = false;
+        newsElements.refresh.disabled = false;
+      }
+    }
+
+    newsElements.refresh.addEventListener('click', fetchFinanceNews);
+    newsElements.sort.addEventListener('change', fetchFinanceNews);
+
+    fetchFinanceNews();
+  </script>
+</body>
+</html>

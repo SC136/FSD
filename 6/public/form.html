@@ -1,145 +1,417 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact Manager</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Arial, sans-serif;
-      background: #f0f2f5;
+      background: #eef2f7;
       display: flex;
       justify-content: center;
-      padding: 40px 16px;
+      padding: 32px 12px;
+      color: #1f2d3d;
     }
     .card {
       background: #fff;
       border-radius: 12px;
-      padding: 28px;
+      padding: 24px;
       width: 100%;
-      max-width: 520px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      max-width: 720px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     }
-    h1 { text-align: center; font-size: 22px; margin-bottom: 20px; }
-    h2 { text-align: center; font-size: 18px; margin: 4px 0 12px; }
-    label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 4px; }
-    input[type="text"], input[type="email"], input[type="tel"] {
-      width: 100%; padding: 9px 12px;
-      border: 1px solid #ccc; border-radius: 6px;
-      font-size: 14px; margin-bottom: 14px;
+    h1 { text-align: center; margin-bottom: 18px; }
+    h2 { margin: 20px 0 10px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
     }
-    input:focus { outline: none; border-color: #2d87d4; }
-    .btn-add {
-      width: 100%; padding: 11px;
-      background: #2d87d4; color: #fff;
-      border: none; border-radius: 6px;
-      font-size: 15px; font-weight: bold;
-      cursor: pointer; margin-bottom: 16px;
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 4px;
     }
-    .btn-add:hover { background: #2272b8; }
-    #searchInput { margin-bottom: 16px; }
+    input, select {
+      width: 100%;
+      border: 1px solid #cad5e1;
+      border-radius: 6px;
+      padding: 9px 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2f80ed;
+      box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.14);
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-primary { background: #2f80ed; color: #fff; }
+    .btn-secondary { background: #708090; color: #fff; }
+    .btn-danger { background: #d94841; color: #fff; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+      margin-bottom: 12px;
+    }
+    .status {
+      min-height: 22px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .status.error { color: #c62828; }
+    .status.success { color: #2e7d32; }
     .contact-item {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 10px 0;
-      border-bottom: 1px solid #eee; font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid #e4e9f0;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
     }
-    .contact-info p { margin: 2px 0; }
-    .contact-info .name  { font-weight: bold; }
-    .contact-info .sub   { color: #666; font-size: 13px; }
-    .btn-delete {
-      background: #e74c3c; color: #fff;
-      border: none; border-radius: 4px;
-      padding: 5px 12px; cursor: pointer;
-      font-size: 13px; white-space: nowrap;
+    .contact-info .name { font-weight: bold; }
+    .contact-info .sub { color: #5f6c7b; font-size: 13px; }
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
-    .btn-delete:hover { background: #c0392b; }
-    #emptyMsg { text-align: center; color: #999; font-size: 13px; margin-top: 8px; }
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+    }
+    #emptyMsg {
+      color: #7b8794;
+      text-align: center;
+      padding: 16px 0;
+    }
+    @media (max-width: 620px) {
+      .toolbar { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-<div class="card">
-  <h1>Contact Manager</h1>
+  <div class="card">
+    <h1>Contact Manager</h1>
 
-  <label>Name:</label>
-  <input type="text" id="name" placeholder="Enter Name">
+    <form id="contactForm" novalidate>
+      <div class="grid">
+        <div>
+          <label for="name">Name</label>
+          <input id="name" type="text" placeholder="Enter name" minlength="2" required />
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="Enter email" required />
+        </div>
+        <div>
+          <label for="phone">Phone</label>
+          <input id="phone" type="tel" placeholder="Enter phone" pattern="^\+?[0-9\-()\s]{7,20}$" required />
+        </div>
+      </div>
+      <div class="actions">
+        <button id="saveBtn" class="btn-primary" type="submit">Add Contact</button>
+        <button id="cancelEditBtn" class="btn-secondary" type="button" style="display:none;">Cancel Edit</button>
+      </div>
+      <div id="status" class="status"></div>
+    </form>
 
-  <label>Email:</label>
-  <input type="email" id="email" placeholder="Enter Email">
+    <h2>Contacts</h2>
 
-  <label>Phone Number:</label>
-  <input type="tel" id="phone" placeholder="Enter Phone Number">
+    <div class="toolbar">
+      <input id="searchInput" type="text" placeholder="Search by name or email" />
+      <select id="sortBy">
+        <option value="name">Sort by Name</option>
+        <option value="email">Sort by Email</option>
+        <option value="createdAt">Sort by Created Time</option>
+      </select>
+      <select id="sortOrder">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
+    </div>
 
-  <button class="btn-add" onclick="addContact()">Add Contact</button>
+    <div id="contactList"></div>
+    <p id="emptyMsg" style="display:none;">No contacts found.</p>
 
-  <h2>Contact List</h2>
-  <input type="text" id="searchInput" placeholder="Search by name or email..."
-         oninput="renderContacts()">
+    <div class="pagination">
+      <div id="pageMeta">Page 1 of 1</div>
+      <div class="pagination-controls">
+        <button id="prevPageBtn" type="button" class="btn-secondary">Prev</button>
+        <button id="nextPageBtn" type="button" class="btn-secondary">Next</button>
+      </div>
+    </div>
+  </div>
 
-  <div id="contactList"></div>
-  <p id="emptyMsg">No contacts yet. Add one above.</p>
-</div>
+  <script>
+    const API = 'http://localhost:3000/contacts';
 
-<script>
-  const API = 'http://localhost:3000/contacts';
+    const state = {
+      page: 1,
+      limit: 5,
+      totalPages: 1,
+      search: '',
+      sortBy: 'name',
+      sortOrder: 'asc',
+      editingId: null,
+      contacts: []
+    };
 
-  async function loadContacts() {
-    const res  = await fetch(API);
-    const data = await res.json();
-    window._contacts = data;
-    renderContacts();
-  }
+    const elements = {
+      form: document.getElementById('contactForm'),
+      name: document.getElementById('name'),
+      email: document.getElementById('email'),
+      phone: document.getElementById('phone'),
+      saveBtn: document.getElementById('saveBtn'),
+      cancelEditBtn: document.getElementById('cancelEditBtn'),
+      status: document.getElementById('status'),
+      list: document.getElementById('contactList'),
+      emptyMsg: document.getElementById('emptyMsg'),
+      searchInput: document.getElementById('searchInput'),
+      sortBy: document.getElementById('sortBy'),
+      sortOrder: document.getElementById('sortOrder'),
+      pageMeta: document.getElementById('pageMeta'),
+      prevPageBtn: document.getElementById('prevPageBtn'),
+      nextPageBtn: document.getElementById('nextPageBtn')
+    };
 
-  function renderContacts() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const list  = (window._contacts || []).filter(c =>
-      c.name.toLowerCase().includes(query) ||
-      c.email.toLowerCase().includes(query)
-    );
-
-    const div = document.getElementById('contactList');
-    div.innerHTML = '';
-    document.getElementById('emptyMsg').style.display = list.length ? 'none' : 'block';
-
-    list.forEach(c => {
-      div.innerHTML += `
-        <div class="contact-item">
-          <div class="contact-info">
-            <p class="name">${c.name}</p>
-            <p class="sub">${c.email} &nbsp;|&nbsp; ${c.phone}</p>
-          </div>
-          <button class="btn-delete" onclick="deleteContact('${c._id}')">Delete</button>
-        </div>`;
-    });
-  }
-
-  async function addContact() {
-    const name  = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-
-    if (!name || !email || !phone) {
-      alert('Please fill in all fields.');
-      return;
+    function showStatus(message, kind) {
+      elements.status.textContent = message;
+      elements.status.className = `status ${kind || ''}`;
     }
 
-    await fetch(API, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ name, email, phone })
+    function clearStatus() {
+      showStatus('', '');
+    }
+
+    function getFormData() {
+      return {
+        name: elements.name.value.trim(),
+        email: elements.email.value.trim(),
+        phone: elements.phone.value.trim()
+      };
+    }
+
+    function validateForm() {
+      const payload = getFormData();
+      if (!payload.name || payload.name.length < 2) {
+        return 'Name must be at least 2 characters long';
+      }
+      if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+        return 'Please enter a valid email address';
+      }
+      if (!payload.phone || !/^\+?[0-9\-()\s]{7,20}$/.test(payload.phone)) {
+        return 'Please enter a valid phone number';
+      }
+      return null;
+    }
+
+    function resetForm() {
+      state.editingId = null;
+      elements.form.reset();
+      elements.saveBtn.textContent = 'Add Contact';
+      elements.cancelEditBtn.style.display = 'none';
+    }
+
+    function setEditMode(contact) {
+      state.editingId = contact._id;
+      elements.name.value = contact.name;
+      elements.email.value = contact.email;
+      elements.phone.value = contact.phone;
+      elements.saveBtn.textContent = 'Update Contact';
+      elements.cancelEditBtn.style.display = 'inline-block';
+      clearStatus();
+    }
+
+    function buildQuery() {
+      const params = new URLSearchParams({
+        page: String(state.page),
+        limit: String(state.limit),
+        search: state.search,
+        sortBy: state.sortBy,
+        sortOrder: state.sortOrder
+      });
+      return `${API}?${params.toString()}`;
+    }
+
+    async function apiRequest(url, options = {}) {
+      const response = await fetch(url, options);
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body.error || 'Request failed');
+      }
+      return body;
+    }
+
+    function renderContacts() {
+      elements.list.innerHTML = '';
+      elements.emptyMsg.style.display = state.contacts.length ? 'none' : 'block';
+
+      state.contacts.forEach(contact => {
+        const row = document.createElement('div');
+        row.className = 'contact-item';
+        row.innerHTML = `
+          <div class="contact-info">
+            <div class="name"></div>
+            <div class="sub"></div>
+          </div>
+          <div class="row-actions">
+            <button type="button" class="btn-primary edit-btn">Edit</button>
+            <button type="button" class="btn-danger delete-btn">Delete</button>
+          </div>
+        `;
+
+        row.querySelector('.name').textContent = contact.name;
+        row.querySelector('.sub').textContent = `${contact.email} | ${contact.phone}`;
+
+        row.querySelector('.edit-btn').addEventListener('click', () => setEditMode(contact));
+        row.querySelector('.delete-btn').addEventListener('click', () => deleteContact(contact._id));
+
+        elements.list.appendChild(row);
+      });
+
+      elements.pageMeta.textContent = `Page ${state.page} of ${state.totalPages}`;
+      elements.prevPageBtn.disabled = state.page <= 1;
+      elements.nextPageBtn.disabled = state.page >= state.totalPages;
+    }
+
+    async function loadContacts() {
+      try {
+        const data = await apiRequest(buildQuery());
+        state.contacts = data.data || [];
+        state.totalPages = data.pagination?.totalPages || 1;
+
+        if (state.page > state.totalPages) {
+          state.page = state.totalPages;
+          return loadContacts();
+        }
+
+        renderContacts();
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
+    }
+
+    async function deleteContact(id) {
+      if (!confirm('Delete this contact?')) {
+        return;
+      }
+
+      try {
+        await apiRequest(`${API}/${id}`, { method: 'DELETE' });
+        showStatus('Contact deleted successfully', 'success');
+        await loadContacts();
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
+    }
+
+    elements.form.addEventListener('submit', async event => {
+      event.preventDefault();
+      clearStatus();
+
+      const validationError = validateForm();
+      if (validationError) {
+        showStatus(validationError, 'error');
+        return;
+      }
+
+      const payload = getFormData();
+
+      try {
+        if (state.editingId) {
+          await apiRequest(`${API}/${state.editingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          showStatus('Contact updated successfully', 'success');
+        } else {
+          await apiRequest(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          showStatus('Contact added successfully', 'success');
+        }
+
+        resetForm();
+        state.page = 1;
+        await loadContacts();
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
     });
 
-    document.getElementById('name').value  = '';
-    document.getElementById('email').value = '';
-    document.getElementById('phone').value = '';
-    loadContacts();
-  }
+    elements.cancelEditBtn.addEventListener('click', () => {
+      resetForm();
+      clearStatus();
+    });
 
-  async function deleteContact(id) {
-    await fetch(`${API}/${id}`, { method: 'DELETE' });
-    loadContacts();
-  }
+    elements.searchInput.addEventListener('input', event => {
+      state.search = event.target.value.trim();
+      state.page = 1;
+      loadContacts();
+    });
 
-  loadContacts();
-</script>
+    elements.sortBy.addEventListener('change', event => {
+      state.sortBy = event.target.value;
+      state.page = 1;
+      loadContacts();
+    });
+
+    elements.sortOrder.addEventListener('change', event => {
+      state.sortOrder = event.target.value;
+      state.page = 1;
+      loadContacts();
+    });
+
+    elements.prevPageBtn.addEventListener('click', () => {
+      if (state.page > 1) {
+        state.page -= 1;
+        loadContacts();
+      }
+    });
+
+    elements.nextPageBtn.addEventListener('click', () => {
+      if (state.page < state.totalPages) {
+        state.page += 1;
+        loadContacts();
+      }
+    });
+
+    loadContacts();
+  </script>
 </body>
 </html>
